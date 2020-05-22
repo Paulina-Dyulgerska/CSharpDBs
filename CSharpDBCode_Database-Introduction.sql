@@ -457,6 +457,7 @@ SELECT TaxRate FROM Payments
 TRUNCATE TABLE Occupancies
 
 
+
 -- Problem 16 - 22
 CREATE DATABASE SoftUni
 
@@ -545,3 +546,4 @@ UPDATE Employees
 SET Salary += Salary * 0.1
 
 SELECT Salary FROM Employees
+
