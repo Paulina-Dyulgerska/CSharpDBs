@@ -268,3 +268,110 @@ SELECT [DayOfWeek] FROM [dbo].[v_GetHireDateAndDateOfWeek] ----This is the Execu
 
 SELECT [Full Name] FROM v_EmployeesByDepartment ----This is the Executed query
 
+CREATE VIEW v_HighestPeak AS
+SELECT TOP (1) [Id]
+      ,[PeakName]
+      ,[Elevation]
+      ,[MountainId]
+	FROM [Geography].[dbo].[Peaks]
+	ORDER BY Elevation DESC
+
+SELECT * FROM v_HighestPeak
+
+USE SoftUni
+--moga da vkarwam bez da opisvam imenata na kolonite i bez da pisha nishto v Primary Key kolonata:
+INSERT INTO Towns VALUES ('Plovdiv')
+
+--moga da vkarwam kato opisvam imenata na kolonite, v koito pisha, no bez da pisha nishto v Primary Key kolonata:
+INSERT INTO Towns (Name) VALUES ('Stara Zagora')
+
+INSERT INTO Towns (Name) VALUES ('Pleven'), ('Varna')
+
+--moga da insertvam samo kolonite, koito iskam, ne sym dlyjna da pisha vyv vsichki koloni:
+INSERT INTO Employees (FirstName, LastName, JobTitle, DepartmentID, HireDate, Salary)
+	VALUES ('Niki', 'Kostov', 'Trainer', 7, GETDATE(), 10000)
+--Nqma da mi dade taka da vkarwam, ako nqkoq ot nezapisanite ot men koloni e zabranena za NULL zapis!!!!
+
+--moga da insertvam i rezultat ot SELECT zaqwka - vkarvam resultata ot Departments Name + Restructuring i dneshna data:
+INSERT INTO Projects ([Name], StartDate)
+     SELECT [Name] + ' Restructuring', GETDATE()
+       FROM Departments
+
+INSERT INTO Projects ([Name], [Description], StartDate)
+SELECT 'New ' + [Name], [Description], GETDATE() AS StartDate
+	FROM Projects
+	WHERE [Name] LIKE 'C%'
+
+----ot tablica Customers vzimam iskanite koloni i gi vkarvam v tablica CustomerContacts:
+--SELECT CustomerID, FirstName, Email, Phone
+--  INTO CustomerContacts
+--  FROM Customers
+
+SELECT TOP (1) [ProjectID]
+      ,[Name]
+      ,[Description]
+      ,[StartDate]
+      ,[EndDate]
+  FROM [SoftUni].[dbo].[Projects]
+
+--ot tablica [Projects] vzimam iskanite koloni i syzdawam nova tablica ProjectNames, popylnena s tezi danni:
+SELECT [ProjectID], [Name]
+  INTO ProjectNames
+  FROM [Projects]
+
+--pravq tablica Names s columns FullName i Salary, koito sa vzeti ot tablca Employees
+SELECT FirstName + ' ' + LastName AS FullName, Salary
+	INTO Names
+	FROM Employees
+
+CREATE SEQUENCE seq_Customers_CustomerID
+	AS INT --typa na sequence e int
+    START WITH 1
+	INCREMENT BY 1
+	
+SELECT NEXT VALUE FOR seq_Customers_CustomerID 
+
+CREATE SEQUENCE seq_MySequence
+	AS INT --typa na sequence e int
+    START WITH 0
+	INCREMENT BY 1001
+	
+SELECT NEXT VALUE FOR seq_MySequence --taka go vikam sequenca i pri vsqko vikane mu vdigam stojnostta!!!!
+--zad IDENTITY-to stoi tochno edin sequence!!!
+--sequenca ne se nullira, ne se restartira!!!
+
+SELECT * FROM Names
+	WHERE FullName LIKE 'AN%'
+
+--DELETE FROM Names
+--	WHERE FullName LIKE 'AN%'
+
+--updatevam samo Niki
+UPDATE Names
+	SET Salary = Salary + 1000
+	WHERE Fullname LIKE 'Niki%'
+
+SELECT *
+	FROM Names
+	WHERE Fullname LIKE '%Niki%'
+
+--update-vam vsichki zapisi
+UPDATE Names
+	SET Salary = Salary + 1000
+
+--moga da promenqm nqkolko neshta ednovremenno:
+UPDATE Names
+	SET Salary = Salary * 1.2, FullName = '_' + FullName
+
+SELECT *
+	FROM Projects
+	WHERE EndDate IS Null
+	ORDER BY EndDate DESC
+
+UPDATE Projects
+	SET EndDate = GETDATE()
+	WHERE EndDate IS NULL
+
+--HOMEWORK:
+
+--Problem 
