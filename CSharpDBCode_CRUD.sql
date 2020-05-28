@@ -1,4 +1,4 @@
---SELECT TownID FROM SoftUni.dbo.Towns
+﻿--SELECT TownID FROM SoftUni.dbo.Towns
 
 USE SoftUni
 -- V Select moga da dawam ne samo imena na koloni, no i preobrazuvaniq po tqh:
@@ -155,6 +155,10 @@ SELECT *
 SELECT *
 	FROM Employees
 	WHERE NOT (Salary = 10000)
+
+SELECT *
+	FROM Employees
+	WHERE Salary <> 10000
 
 SELECT *
 	FROM Employees
@@ -374,4 +378,218 @@ UPDATE Projects
 
 --HOMEWORK:
 
---Problem 
+--Problem 2.	Find All Information About Departments
+SELECT *
+  FROM [Departments]
+
+--Problem 3.	Find all Department Names
+SELECT [Name]
+  FROM [Departments]
+
+--Problem 4.	Find Salary of Each Employee
+SELECT [FirstName]
+      ,[LastName]
+      ,[Salary]
+  FROM [Employees]
+
+--Problem 5.	Find Full Name of Each Employee
+SELECT [FirstName]
+      ,[MiddleName]
+	  ,[LastName]
+      FROM [Employees]
+
+--Problem 6.	Find Email Address of Each Employee
+SELECT [FirstName] + '.' + [LastName] + '@softuni.bg' AS [Full Email Address]
+  FROM [Employees]
+
+--i taka stava, ama ne raboti v Judge, zashtoto CONCAT e nova funcion v SQL i Judge ne q poddyrja.
+SELECT CONCAT([FirstName],'.', [LastName], '@', 'softuni.bg') AS [Full Email Address]
+  FROM [Employees]
+
+--Problem 7.	Find All Different Employee’s Salaries
+SELECT Salary
+	FROM Employees
+	GROUP BY Salary
+
+--moje i taka:
+SELECT DISTINCT Salary FROM Employees
+
+--Problem 8.	Find all Information About Employees
+SELECT *
+	FROM Employees
+	WHERE JobTitle = 'Sales Representative'
+
+--Problem 9.	Find Names of All Employees by Salary in Range
+SELECT FirstName, LastName, JobTitle
+	FROM Employees
+	WHERE Salary >= 20000 AND Salary <= 30000
+
+--Problem 10. Find Names of All Employees
+SELECT FirstName + ' ' + MiddleName + ' ' + LastName AS [Full Name]
+	FROM Employees
+	WHERE Salary IN (25000, 14000, 12500, 23600)
+
+--MOJE I TAKA:
+--SELECT CONCAT(FirstName,' ',MiddleName, ' ', LastName) AS [Full Name] --tova pri MiddleName = NULL pravi '  ' v imeto!
+SELECT CONCAT(FirstName,' ', (MiddleName + ' '), LastName) AS [Full Name]
+	FROM Employees
+	WHERE Salary IN (25000, 14000, 12500, 23600)
+	--NO CONCAT ako sreshtne NULL pole, shte go zamesti s '' i taka shte vizualizira stringa, koeto ne e mnogo gotino,
+	--zashtoto shte imam ' ' posle '' i posle pak ' ' vytre v imeto na choveka,t.e. shte imam dva intervala v imeto.
+	--moga da izbegna towa, kato sloja MiddleName + ' ' vyrte v CONCAT - taka functiona shte prochete MiddleName i ako
+	--MiddleName IS NULL, shte go sybere s ' ', a NULL + ' ' = NULL, a tozi NULL shte se zamesti s '' (empty string)!!!
+	--taka s tazi hakeriq moga da izbegna dvata intervala v imeto na choveka pri MiddleName = NULL!!!
+
+--Problem 11.	 Find All Employees Without Manager
+--v tablicata Employees ManagerID e relaciq kym syshtata tablica Employees!!! T.e. ManagerID e relaciq na tablica sys
+--samata sebe si!!! ManagerID e FK, kojto sochi kym PK ot syshtata tablica!!!!
+SELECT FirstName, LastName
+	FROM Employees
+	--WHERE (ManagerID IS NULL) OR ManagerID = '' OR ManagerID = ' '
+	WHERE ManagerID IS NULL
+	--WHERE ManagerID IS NOT NULL --ako iskam da proverq na koj ManagerID ne mu e NULL
+
+--Problem 12. Find All Employees with Salary More Than
+SELECT FirstName, LastName, Salary
+	FROM Employees
+	WHERE Salary > 50000
+	ORDER BY Salary DESC
+
+--Problem 13. Find 5 Best Paid Employees
+SELECT TOP (5) FirstName, LastName
+	FROM Employees
+	ORDER BY Salary DESC
+
+--moje i taka:
+SELECT FirstName, LastName
+	FROM Employees
+	ORDER BY Salary DESC
+	OFFSET 0 ROWS
+	FETCH NEXT 5 ROWS ONLY
+--tova na C# shte e taka Employees.OrderByDescending(x=>x.Salary).Skip(0).Take(5).ToArray();
+
+--taka moga da vzema sumata na top 5 salaries:
+SELECT SUM(Salary) AS [Salary Sum] 
+	FROM (SELECT TOP (5) FirstName, LastName, Salary
+		FROM Employees
+		ORDER BY Salary DESC) AS Top5Salaries
+
+--Problem 14. Find All Employees Except Marketing
+SELECT FirstName, LastName
+	FROM Employees
+	WHERE NOT(DepartmentID = 4)
+
+--Problem 15. Sort Employees Table
+SELECT *
+	FROM Employees
+	ORDER BY Salary DESC, FirstName ASC, LastName DESC, MiddleName ASC
+
+--Problem 16. Create View Employees with Salaries
+CREATE VIEW V_EmployeesSalaries AS
+	SELECT FirstName, LastName, Salary
+	FROM Employees
+
+--Problem 17.	Create View Employees with Job Titles
+CREATE VIEW V_EmployeeNameJobTitle AS
+	SELECT FirstName + ' ' + ISNULL(MiddleName, '') + ' ' + LastName AS [FullName], JobTitle AS [Job Title]
+	FROM Employees
+--ISNULL(MiddleName, '') - proverqda dali column MiddleName e Null i ako e, vryshta '' vmesto NULL
+--Ako ne napravq towa zamestwane na NULL, concatenaciqta na imentata, tam kydeto ima NULL, shte dovede do tova, che
+--celiqt Full Name shte mi e NULL, ako MiddleName e NUll!!! Ako beshe taka, shtqh da imam cisti zapisi NULL kato FUll Name
+--a az ne iskam towa:
+	--SELECT FirstName + ' ' + MiddleName + ' ' + LastName AS [FullName], JobTitle AS [Job Title]
+	--FROM Employees
+
+--Problem 18. Distinct Job Titles
+SELECT JobTitle
+	FROM Employees
+	GROUP By JobTitle
+
+--Problem 19. Find First 10 Started Projects
+SELECT TOP (10) [ProjectID]
+      ,[Name]
+      ,[Description]
+      ,[StartDate]
+      ,[EndDate]
+	FROM Projects
+	ORDER BY StartDate ASC, [Name] ASC
+
+--Problem 20. Last 7 Hired Employees
+SELECT TOP (7) [FirstName]
+      ,[LastName]
+      ,[HireDate]
+	FROM Employees
+	ORDER BY HireDate DESC
+
+--Problem 21.	Increase Salaries
+UPDATE Employees
+	SET Salary = Salary * 1.12
+	WHERE DepartmentID IN (1, 2, 4, 11)
+
+SELECT Salary
+	FROM Employees
+	WHERE DepartmentID IN (1, 2, 4, 11)
+
+UPDATE Employees
+	SET Salary = Salary / 1.12
+	WHERE DepartmentID IN (1, 2, 4, 11)
+
+--vtori variant:
+UPDATE Employees
+	SET Salary = Salary * 1.12
+	WHERE DepartmentID  IN (
+		SELECT DepartmentID 
+		FROM Departments
+		WHERE [Name] IN ('Engineering', 'Tool Design', 'Marketing', 'Information Services'))
+
+--Problem 22. All Mountain Peaks
+SELECT [PeakName]
+  FROM [Peaks]
+  ORDER BY PeakName ASC
+
+--Problem 23. Biggest Countries by Population
+SELECT TOP (30) [CountryName]
+      ,[Population]
+  FROM [Countries]
+  WHERE [ContinentCode] = 'EU'
+  ORDER BY [Population] DESC, CountryName ASC
+
+--Problem 24. Countries and Currency (Euro / Not Euro)
+SELECT 
+	[CountryName], 
+	[CountryCode],
+	CASE
+		WHEN [CurrencyCode] = 'EUR' THEN 'Euro'
+		ELSE 'Not Euro'
+	END AS Currency
+	FROM Countries
+	ORDER BY CountryName
+
+--Problem 25. All Diablo Characters
+SELECT [Name]
+  FROM [Characters]
+  ORDER BY [Name] ASC
+
+--Unicode vs Non-Unicode strings saving and memory used for this:
+CREATE TABLE StringDataLengthDemos (
+	Id INT PRIMARY KEY IDENTITY(1,1),
+	NonUnicodeString VARCHAR(50) NOT NULL,
+	UnicodeString NVARCHAR(50) NOT NULL
+)
+INSERT INTO StringDataLengthDemos
+	VALUES ('Gosho', 'Gosho'),--memory needed 5KB | 10 KB
+			('Pesho', N'Поля')--memory needed 5KB | 8 KB
+
+--Taka se vkarva unicode string - s N otpred.
+INSERT INTO StringDataLengthDemos
+	VALUES ('Pesho', N'Поля')	
+
+--taka ne moje da se zapishe unicode string-a, a zapisva ???? na negovo mqsto:
+INSERT INTO StringDataLengthDemos
+	VALUES ('Pesho', 'Поля') 
+
+SELECT NonUnicodeString, UnicodeString,
+	DATALENGTH(NonUnicodeString), --kolko memory otiva za tozi string vijdam s tazi function
+	DATALENGTH(UnicodeString)	--kolko memory otiva za tozi string vijdam s tazi function
+	FROM StringDataLengthDemos
+
