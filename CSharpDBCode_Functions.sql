@@ -449,6 +449,27 @@ SELECT EmployeeID, FirstName, LastName, Salary
 	FROM Employees
 ORDER BY EmployeeID DESC
 
+--a taka se pravi hem partishion hem i order zaedno!!!
+SELECT EmployeeID
+	, FirstName
+	, LastName
+	, Salary
+	, DENSE_RANK() OVER
+		(PARTITION BY Salary ORDER BY EmployeeID ASC) AS Rank
+	FROM Employees
+	WHERE Salary BETWEEN 10000 AND 50000
+	ORDER BY Salary DESC
+
+
+SELECT i.ProductID, p.Name, i.LocationID, i.Quantity  
+    ,DENSE_RANK() OVER   
+    (PARTITION BY i.LocationID ORDER BY i.Quantity DESC) AS Rank  
+FROM Production.ProductInventory AS i   
+INNER JOIN Production.Product AS p   
+    ON i.ProductID = p.ProductID  
+WHERE i.LocationID BETWEEN 3 AND 4  
+ORDER BY i.LocationID; 
+
 NTILE – Distributes the rows in an ordered partition into a specified number of groups
 podrejda mi v grupi, kolkoto az mu kaja broj grupi, v koito sa sybrani horata po zaplata
 v namalqwasht red!!! S naj-visokite zaplati sa horata ot grupa 1!!!! A naj-niskite
@@ -500,6 +521,8 @@ SELECT EmployeeID, FirstName, LastName, Salary
 	, MIN(Salary) OVER(ORDER BY DepartmentID DESC) AS MinSalary --poluchavam min zaplata za otdela, v kojto raboti choveka!!!
 	FROM Employees
 ORDER BY Salary DESC
+
+
 
 Wildcards:
 Selecting Results by Partial Match
@@ -557,3 +580,280 @@ Using Wildcards, we can obtain results by partial string matches
 --HOMEWORK Built-in Functions:
 --Problem 1.	Find Names of All Employees by First Name
 USE SoftUni
+
+SELECT FirstName, LastName
+	FROM Employees 
+	WHERE FirstName LIKE 'SA%'
+
+--Problem 2.	  Find Names of All employees by Last Name 
+SELECT FirstName, LastName
+	FROM Employees 
+	WHERE LastName LIKE '%ei%'
+
+--Problem 3.	Find First Names of All Employees
+Write a SQL query to find the first names of all employees in the departments with ID 3 or 10 and whose hire year is between 1995 and 2005 inclusive.
+
+SELECT FirstName, DepartmentId, HireDate
+	FROM Employees 
+	WHERE (DepartmentId = 3 OR DepartmentId = 10) AND (DATENAME(YEAR, HireDate)>=1995 OR DATENAME(YEAR, HireDate)<=2005)
+
+--Problem 4.	Find All Employees Except Engineers
+SELECT FirstName, LastName, JobTitle
+	FROM Employees 
+	WHERE JobTitle NOT LIKE '%Engineer%'	
+	--WHERE NOT JobTitle = 'Engineer' -- tova ne e syshtoto kato gornoto
+
+--Problem 5.	Find Towns with Name Length
+SELECT [Name]
+	FROM Towns
+	WHERE DATALENGTH(Towns.[Name]) BETWEEN 5 AND 6
+	ORDER BY [Name] ASC
+
+--Problem 6.	 Find Towns Starting With
+--Write a SQL query to find all towns that start with letters M, K, B or E. Order them alphabetically by town name. 
+SELECT TownID, [Name]
+	FROM Towns
+	WHERE [Name] LIKE '[MKBE]%' 
+	--WHERE LEFT([Name], 1) IN ('M','K', 'B','E') 
+	--WHERE SUBSTRING([Name],1,1) IN ('M','K', 'B','E') 
+	ORDER BY [Name] ASC
+
+
+--Problem 7.	 Find Towns Not Starting With
+--Write a SQL query to find all towns that does not start with letters R, B or D. Order them alphabetically by name. 
+SELECT TownID, [Name]
+	FROM Towns
+	WHERE [Name] NOT LIKE '[RBD]%' 
+	--WHERE [Name] LIKE '[^RBD]%' 
+	ORDER BY [Name] ASC
+
+
+--Problem 8.	Create View Employees Hired After 2000 Year
+--Write a SQL query to create view V_EmployeesHiredAfter2000 with first and last name to all employees hired after 2000 year.
+
+CREATE VIEW V_EmployeesHiredAfter2000 AS
+	SELECT FirstName, LastName
+	FROM Employees
+	WHERE YEAR(HireDate)> 2000
+
+SELECT * FROM V_EmployeesHiredAfter2000
+
+
+--Problem 9.	Length of Last Name
+--Write a SQL query to find the names of all employees whose last name is exactly 5 characters long.
+
+SELECT FirstName, LastName
+	FROM Employees
+	WHERE DATALENGTH(LastName) = 5
+
+--Problem 10.	
+--Rank Employees by Salary
+--Write a query that ranks all employees using DENSE_RANK. In the DENSE_RANK function, 
+--employees need to be partitioned by Salary and ordered by EmployeeID. You need to find only the employees 
+--whose Salary is between 10000 and 50000 and order them by Salary in descending order.
+
+SELECT EmployeeID
+	, FirstName
+	, LastName
+	, Salary
+	, DENSE_RANK() OVER --DENSE_RANK pravi pyrvo mnogo malki grupi, v koito vytre salary e == i sled towa vytre 
+	--vyv vsqka edna grupa pravi dense_rank podrejdane po EmployeeID na horata v grupata i im slga rank 1 na tozi s
+	--naj-malkoto ID i t.n. do kraq na syotvetnata grupa!!!
+		(PARTITION BY Salary ORDER BY EmployeeID ASC) AS Rank
+	FROM Employees
+	WHERE Salary BETWEEN 10000 AND 50000
+	ORDER BY Salary DESC
+
+--stava i taka:
+WITH Employee AS (SELECT EmployeeID, FirstName, LastName, Salary, 
+							DENSE_RANK() OVER(PARTITION BY Salary ORDER BY EmployeeID) AS [Rank]
+						FROM Employees)
+	SELECT * FROM Employee
+	WHERE (Salary BETWEEN 10000 AND 50000) AND [Rank]=2
+	ORDER BY Salary DESC
+
+SELECT EmployeeID
+	, FirstName
+	, LastName
+	, Salary
+	, DENSE_RANK() OVER --DENSE_RANK pravi rank po salary, kato horata s == Salary sa s edin i syshti rank, a
+	--tesi zled tqh im narastva ranka s 1 i t.n.!!!
+		(ORDER BY Salary DESC) AS Rank
+	FROM Employees
+	WHERE Salary BETWEEN 10000 AND 50000
+	ORDER BY Rank
+
+SELECT EmployeeID
+	, FirstName
+	, LastName
+	, Salary
+	, RANK() OVER --RANK pravi rank po salary, kato horata s == Salary sa s edin i syshti rank, a
+	--tesi zled tqh im narastva ranka ne s 1, a naprimer, ako 3-ma sa s == Salary i Rank 1, to tozi sled tqh, 
+	--veche shte e Rank 4 i t.n.!!!
+		(ORDER BY Salary DESC) AS Rank
+	FROM Employees
+	WHERE Salary BETWEEN 10000 AND 50000
+	ORDER BY Rank
+
+
+
+--Problem 11.	Find All Employees with Rank 2 *
+--Use the query from the previous problem and upgrade it, so that it finds only the employees whose 
+--Rank is 2 and again, order them by Salary (descending).
+
+ SELECT * 
+	FROM
+	(SELECT EmployeeID
+	, FirstName
+	, LastName
+	, Salary
+	, DENSE_RANK() OVER
+		(PARTITION BY Salary ORDER BY EmployeeID ASC) AS [Rank]
+	FROM Employees) AS R
+	WHERE [Rank] = 2 AND Salary BETWEEN 10000 AND 50000
+	ORDER BY Salary DESC
+
+
+Part II – Queries for Geography Database 
+ --Problem 12.	Countries Holding ‘A’ 3 or More Times
+--Find all countries that holds the letter 'A' in their name at least 3 times (case insensitively), 
+--sorted by ISO code. Display the country name and ISO code. 
+USE Geography
+
+SELECT  [CountryName] ,[IsoCode]
+  FROM [Countries]
+  WHERE CountryName LIKE '%[A]%[A]%[A]%'
+  ORDER BY IsoCode
+
+--Problem 13.	 Mix of Peak and River Names
+--Combine all peak names with all river names, so that the last letter of each peak name is the same as 
+--the first letter of its corresponding river name. Display the peak names, river names, and the obtained 
+--mix (mix should be in lowercase). Sort the results by the obtained mix.
+
+SELECT  p.PeakName, 
+		r.RiverName, 
+		LOWER(CONCAT(p.PeakName, SUBSTRING(r.RiverName, 2, LEN(r.RiverName)))) AS Mix
+  FROM Peaks AS p, Rivers AS r --kogato selectvam po poveche ot 1 tablica, rezultata mi e kombinaciite na vseki red
+  --ot ednata tablica s vseki red ot drugata tablica, taka poluchawam tablerow1 * tablerow2 broq na zapisi, v koito
+  --vyrshim kakvoto ni trqbwa. Towa selectvane po 2 tablici mi dawa Dekartovo proizvedenie m/u dvete tablici, t.e.
+  -- rezultata e Table1 X Table2!!!!
+  WHERE RIGHT(p.PeakName, 1) = LEFT(r.RiverName, 1)
+  ORDER BY Mix ASC
+
+USE Geography
+--moje i taka:
+SELECT  p.PeakName, 
+		r.RiverName, 
+		LOWER(CONCAT(p.PeakName, SUBSTRING(r.RiverName, 2, LEN(r.RiverName) - 1))) AS Mix
+  FROM Peaks AS p
+  JOIN Rivers AS r ON RIGHT(p.PeakName, 1) = LEFT(r.RiverName, 1)
+  ORDER BY Mix ASC
+
+--Part III – Queries for Diablo Database
+--Problem 14.	Games from 2011 and 2012 year
+--Find the top 50 games ordered by start date, then by name of the game. Display only games from 2011 and 2012 year. 
+--Display start date in the format "yyyy-MM-dd". 
+
+USE Diablo
+
+SELECT TOP (50) [Name]
+      ,FORMAT([Start], 'yyyy-MM-dd') AS [Start]
+  FROM [Games] AS g
+  WHERE YEAR([Start]) BETWEEN 2011 AND 2012
+  ORDER BY [Start] ASC, [Name] ASC --sortiram po virtualnata kolona [Start]
+  --ako iskah da sortiram po g.[Start], trqbwashe da napisha g.[Start]
+
+--Problem 15.	 User Email Providers
+--Find all users along with information about their email providers. Display the username and email provider. 
+--Sort the results by email provider alphabetically, then by username. 
+
+SELECT [Username], 
+		SUBSTRING([Email], CHARINDEX('@', [Email]) + 1, LEN([Email])) AS [Email Provider]
+  FROM [Users]
+  ORDER BY [Email Provider] ASC, [Username] ASC
+
+--STRING_SPLIT mi vryshta vsichki otdelni substringcheta, koito sa rezultat ot split-a, podredeni v 1 colona 
+--edno pod drugo!!!!
+SELECT [Username], 
+	VALUE [Email Provider]
+  FROM [Users]
+	CROSS APPLY string_split(Users.[Email], '@')
+  ORDER BY [Email Provider] ASC, [Username] ASC
+
+
+
+--Problem 16.	 Get Users with IPAdress Like Pattern
+--Find all users along with their IP addresses sorted by username alphabetically. 
+--Display only rows that IP address matches the pattern: "***.1^.^.***". 
+--Legend: * - one symbol, ^ - one or more symbols
+
+SELECT [Username], 
+		[IpAddress]
+  FROM [Users]
+  WHERE IpAddress LIKE '___.1_%._%.___'
+  ORDER BY [Username]
+
+
+--Problem 17.	 Show All Games with Duration and Part of the Day
+--Find all games with part of the day and duration sorted by game name alphabetically then by duration 
+--(alphabetically, not by the timespan) and part of the day (all ascending). Parts of the day should be Morning 
+--(time is >= 0 and < 12), Afternoon (time is >= 12 and < 18), Evening (time is >= 18 and < 24). Duration should 
+--be Extra Short (smaller or equal to 3), Short (between 4 and 6 including), Long (greater than 6) and Extra Long 
+--(without duration). 
+
+SELECT DATEPART(HOUR, [Start]), [Start] FROM Games
+
+SELECT [Name]
+		,CASE 
+			WHEN DATEPART(HOUR, [Start]) >= 0 AND DATEPART(HOUR, [Start]) < 12 THEN 'Morning'
+			WHEN DATEPART(HOUR, [Start]) >= 12 AND DATEPART(HOUR, [Start]) < 18 THEN 'Afternoon'
+			WHEN DATEPART(HOUR, [Start]) >= 18 AND DATEPART(HOUR, [Start]) < 24 THEN 'Evening'
+		END AS [Part of the Day]
+		,CASE 
+			WHEN [Duration] <= 3 THEN 'Extra Short'
+			WHEN [Duration] >= 4 AND [Duration] <= 6 THEN 'Short'
+			WHEN [Duration] > 6 THEN 'Long'
+			WHEN [Duration] IS NULL THEN 'Extra Long'
+			--ELSE 'Extra Long'
+		END AS [Duration]
+		FROM [Games]
+		ORDER BY [Name] ASC, [Duration] ASC, [Part of the Day] ASC
+
+--Part IV – Date Functions Queries
+--Problem 18.	 Orders Table
+--You are given a table Orders(Id, ProductName, OrderDate) filled with data. Consider that the payment
+--for that order must be accomplished within 3 days after the order date. Also the delivery date is up to 1 month. 
+--Write a query to show each product’s name, order date, pay and deliver due dates. 
+SELECT * FROM Orders
+
+SELECT	[ProductName],
+		[OrderDate],
+		DATEADD(day, 3, [OrderDate]) AS [Pay Due],
+		DATEADD(month, 1, [OrderDate]) AS [Deliver Due]
+		FROM Orders
+		
+--Problem 19.	 People Table
+--Create a table People(Id, Name, Birthdate). Write a query to find age in years, months, days and minutes 
+--for each person for the current time of executing the query.
+CREATE TABLE People (
+	[Id] INT IDENTITY(1,1) PRIMARY KEY,
+	[Name] NVARCHAR(50) NOT NULL,
+	[Birthdate] DATETIME2 NOT NULL
+)
+
+INSERT INTO People
+VALUES
+('Victor','2000-12-07'),
+('Steven','1992-09-10'),
+('Stephen','1910-09-19'),
+('John','2010-01-06')
+
+SELECT * FROM People
+
+SELECT	[Id],
+		[Name],
+		DATEDIFF_BIG(YEAR,[Birthdate],GETDATE()) AS [Age in Years],
+		DATEDIFF_BIG(MONTH,[Birthdate],GETDATE()) AS [Age in Months],
+		DATEDIFF_BIG(DAY,[Birthdate],GETDATE()) AS [Age in Days],
+		DATEDIFF_BIG(MINUTE,[Birthdate],GETDATE()) AS [Age in Minutes]
+		FROM People
