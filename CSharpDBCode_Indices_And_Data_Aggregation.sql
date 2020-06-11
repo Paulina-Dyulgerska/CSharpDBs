@@ -147,13 +147,27 @@ SELECT
 
 SELECT SUM(d.DiffDep)
 FROM (
-		 SELECT w1.DepositAmount - w2.DepositAmount AS DiffDep--, w1.*
+		 SELECT w1.DepositAmount - w2.DepositAmount AS DiffDep, w1.*
 		 FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY Id) AS rowid FROM WizzardDeposits) AS w1
 			JOIN (SELECT *, ROW_NUMBER() OVER (ORDER BY Id) AS rowid FROM WizzardDeposits) AS w2
 			ON w1.rowid = w2.rowid - 1
 	) AS d
 
+--moje da se napravi i taka:
+SELECT SUM(d.w1_deposit - d.w2_deposit) AS [Sum]
+	FROM 
+	(
+		SELECT FirstName AS w1,
+			DepositAmount AS w1_deposit,
+			LEAD(FirstName) OVER(ORDER BY Id ASC) AS w2,
+			LEAD(DepositAmount) OVER(ORDER BY Id ASC) AS w2_deposit
+		FROM WizzardDeposits
+	) AS d
 
+LEAD() - function that returns the value of the next row in that column!!!
+LEAD() spestqwa Self-Join!!!
+
+--a taka moga da go naprawq syshto, no towa ne e dovyrsheno:
 WITH WizzardDepositsActions AS
 (
     SELECT ROW_NUMBER() OVER (ORDER BY [Id]) -- Create an index number ordered by time.
@@ -311,3 +325,13 @@ SELECT TOP(10) e.FirstName, e.LastName, e.DepartmentID
 			ON e.DepartmentID = d.DepartmentID
 	WHERE e.Salary > d.AvgSalary
 	ORDER BY DepartmentID
+
+--moga da polzwam SubQuery i v WHERE clause:
+SELECT TOP(10) e.FirstName, e.LastName, e.DepartmentID
+	FROM Employees AS e
+	WHERE e.Salary > (SELECT AVG(Salary) AS AvgSalary
+						FROM Employees AS d
+						WHERE d.DepartmentID = e.DepartmentID
+						GROUP BY DepartmentID
+						)
+	ORDER BY DepartmentID	
